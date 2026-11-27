@@ -58,6 +58,51 @@ class ListCommandTest(ShelfTestCase):
             "#2 [reading] Kindred by Octavia E. Butler",
         ])
 
+    def test_status_shows_only_matching_books_in_id_order(self):
+        self.shelf("add", "Dune", "Frank Herbert")
+        self.shelf("add", "Kindred", "Octavia E. Butler", "--status", "reading")
+        self.shelf("add", "Beloved", "Toni Morrison", "--status", "reading")
+
+        result = self.shelf("list", "--status", "reading")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, (
+            "#2 [reading] Kindred by Octavia E. Butler\n"
+            "#3 [reading] Beloved by Toni Morrison\n"
+        ))
+        self.assertEqual(result.stderr, "")
+
+    def test_status_with_no_match_says_so(self):
+        self.shelf("add", "Dune", "Frank Herbert")
+
+        result = self.shelf("list", "--status", "done")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "No books with status done.\n")
+        self.assertEqual(result.stderr, "")
+
+    def test_status_on_an_empty_shelf_says_no_match(self):
+        result = self.shelf("list", "--status", "reading")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "No books with status reading.\n")
+        self.assertEqual(result.stderr, "")
+
+    def test_an_unknown_status_is_a_usage_error(self):
+        result = self.shelf("list", "--status", "finished")
+
+        self.assertListRejected(
+            result,
+            "shelf list: error: unknown status 'finished' (use to-read, reading or done)",
+        )
+
+    def assertListRejected(self, result, error_line):
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("usage: shelf list", result.stderr)
+        self.assertTrue(result.stderr.endswith(error_line + "\n"), result.stderr)
+        self.assertEqual(result.stderr.count("error:"), 1, result.stderr)
+
 
 class StartAndFinishCommandTest(ShelfTestCase):
     def test_start_then_finish_a_book(self):
