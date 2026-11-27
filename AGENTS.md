@@ -37,6 +37,8 @@ Always set `SHELF_PATH` when trying the tool by hand, so you never touch the rea
   that loads a file in the old format.
 - Fix the code, not the tests: don't skip, delete or weaken a test to get green.
 - Report user errors as `ShelfError` (exit 1) or `parser.error` (exit 2), never a traceback.
+- The knowledge base is a snapshot. When it disagrees with the code, `--help`
+  or GitHub, trust those and tell me about the disagreement.
 
 ## Done means
 
